@@ -59,7 +59,11 @@ func (ctx HandlerContext) ReplyJson(data map[string]interface{}) {
 		data[JsonKeyErrorMessage] = JsonSuccessMessage
 	}
 
-	js, err := json.Marshal(data)
+	ctx.ReplyJsonObject(data)
+}
+
+func (ctx HandlerContext) ReplyJsonObject(object interface{}) {
+	js, err := json.Marshal(object)
 	if err != nil {
 		logs.Errorf("Marshal json failed, the error is %v.", err)
 		return
