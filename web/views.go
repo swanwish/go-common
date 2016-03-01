@@ -38,6 +38,7 @@ type ViewDefinition struct {
 	Styles          []Style  `json:"styles"`
 	MainRequire     string   `json:"mainRequire"`
 	ModuleScripts   []string `json:"moduleScripts"`
+	StyleSheets     []string `json:"stylesheets"`
 }
 
 var (
