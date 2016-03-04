@@ -1,0 +1,54 @@
+package uploader
+
+import "strings"
+
+const (
+	//bmp,png,jpeg,jpg,gif
+	FILE_EXTENSION_BMP  = "bmp"
+	FILE_EXTENSION_PNG  = "png"
+	FILE_EXTENSION_JPEG = "jpeg"
+	FILE_EXTENSION_JPG  = "jpg"
+	FILE_EXTENSION_GIF  = "gif"
+
+	// mp3,wma,wav,amr
+	FILE_EXTENSION_MP3 = "mp3"
+	FILE_EXTENSION_WMA = "wma"
+	FILE_EXTENSION_WAV = "wav"
+	FILE_EXTENSION_AMR = "amr"
+
+	// rm,rmvb,wmv,avi,mpg,mpeg,mp4
+	FILE_EXTENSION_RM   = "rm"
+	FILE_EXTENSION_RMVB = "rmvb"
+	FILE_EXTENSION_AVI  = "avi"
+	FILE_EXTENSION_MPG  = "mpg"
+	FILE_EXTENSION_MPEG = "mpeg"
+	FILE_EXTENSION_MP4  = "mp4"
+
+	// pdf
+	FILE_EXTENSION_PDF = "pdf"
+
+	// xls
+	FILE_EXTENSION_XLS = "xls"
+)
+
+const (
+	FILE_TYPE_IMAGES = "images"
+	FILE_TYPE_AUDIOS = "audios"
+	FILE_TYPE_VIDEOS = "videos"
+	FILE_TYPE_FILES  = "files"
+)
+
+func GetFileType(extension string) string {
+	switch strings.ToLower(extension) {
+	case FILE_EXTENSION_BMP, FILE_EXTENSION_PNG, FILE_EXTENSION_JPEG, FILE_EXTENSION_JPG, FILE_EXTENSION_GIF:
+		return FILE_TYPE_IMAGES
+	case FILE_EXTENSION_MP3, FILE_EXTENSION_WMA, FILE_EXTENSION_WAV, FILE_EXTENSION_AMR:
+		return FILE_TYPE_AUDIOS
+	case FILE_EXTENSION_RM, FILE_EXTENSION_RMVB, FILE_EXTENSION_AVI, FILE_EXTENSION_MPG, FILE_EXTENSION_MPEG, FILE_EXTENSION_MP4:
+		return FILE_TYPE_VIDEOS
+	case FILE_EXTENSION_PDF, FILE_EXTENSION_XLS:
+		return FILE_TYPE_FILES
+	default:
+		return FILE_TYPE_FILES
+	}
+}
