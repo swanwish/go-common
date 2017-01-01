@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 const (
@@ -28,6 +29,18 @@ func init() {
 
 func RegisterLogLevelText(level int64, text string) {
 	logLevelText[level] = text
+}
+
+func SetLogLevel(logLevel string) {
+	Debugf("The loglevel is %s", logLevel)
+	switch strings.ToLower(logLevel) {
+	case "debug":
+		MaxLogLevel = LOG_LEVEL_DEBUG
+	case "info":
+		MaxLogLevel = LOG_LEVEL_INFO
+	case "error":
+		MaxLogLevel = LOG_LEVEL_ERROR
+	}
 }
 
 func GetLogLevelText(logLevel int64) string {
