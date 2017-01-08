@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"sync"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -17,8 +19,9 @@ import (
 )
 
 const (
-	SessionName         = "2f6be43d2bc41b"
 	SessionKeyLoginUser = "session_login_user"
+	defaultMaxMemory    = 32 << 20 // 32 MB
+	SessionKeyLength    = 16
 )
 
 func init() {
@@ -32,7 +35,47 @@ type LoginUser struct {
 	Email       string
 }
 
-var store = sessions.NewCookieStore(securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(32))
+var (
+	sessionName string
+	store       *sessions.CookieStore
+	storeLock   = &sync.Mutex{}
+)
+
+func SetSessionName(name string) {
+	sessionName = name
+	logs.Debugf("The session name is %s", sessionName)
+}
+
+func getSessionName() string {
+	if sessionName == "" {
+		sessionName = utils.GenerateRandomStringEx(utils.RandomTypeCapitalString|utils.RandomTypeLowercaseChar|utils.RandomTypeDigital, SessionKeyLength)
+		logs.Debugf("The session name is %s", sessionName)
+	}
+	return sessionName
+}
+
+func InitCookieStore(keyPairs ...[]byte) {
+	if keyPairs == nil || len(keyPairs) == 0 || len(keyPairs[0]) == 0 {
+		store = sessions.NewCookieStore(securecookie.GenerateRandomKey(64), securecookie.GenerateRandomKey(32))
+	} else {
+		store = sessions.NewCookieStore(keyPairs...)
+	}
+}
+
+func getStore() *sessions.CookieStore {
+	if store != nil {
+		return store
+	}
+	storeLock.Lock()
+	defer storeLock.Unlock()
+	if store != nil {
+		return store
+	}
+	if store == nil {
+		InitCookieStore(nil)
+	}
+	return store
+}
 
 type HandlerContext struct {
 	W          http.ResponseWriter
@@ -74,6 +117,9 @@ func (ctx HandlerContext) FormValue(key string) string {
 }
 
 func (ctx HandlerContext) FormValues(key string) []string {
+	if ctx.R.Form == nil {
+		ctx.R.ParseMultipartForm(defaultMaxMemory)
+	}
 	return ctx.R.Form[key]
 }
 
@@ -178,7 +224,7 @@ func (ctx HandlerContext) GetClientIp() string {
 }
 
 func (ctx HandlerContext) GetSession() *sessions.Session {
-	session, _ := store.Get(ctx.R, SessionName)
+	session, _ := getStore().Get(ctx.R, getSessionName())
 	return session
 }
 

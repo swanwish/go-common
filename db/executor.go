@@ -12,16 +12,19 @@ import (
 )
 
 const (
-	ErrorMessage_GetConnectionFailed    = "Failed to get database connection"
-	ErrorMessageNoConnectionProvider    = "Connection provider not specified"
-	ErrorMessage_StartTransactionFailed = "Failed to start transaction"
-	ErrorMessageNoTransactionFunction   = "Transaction function not specified"
+	ErrorMessage_GetConnectionFailed  = "Failed to get database connection"
+	ErrorMessageNoConnectionProvider  = "Connection provider not specified"
+	ErrorMessageNoTransactionFunction = "Transaction function not specified"
 )
 
 var (
 	ErrNoConnectionProvider  = errors.New(ErrorMessageNoConnectionProvider)
 	ErrNoTransactionFunction = errors.New(ErrorMessageNoTransactionFunction)
 )
+
+type SqlExecutor interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
 
 type DB interface {
 	Select(dest interface{}, query string, args ...interface{}) error
