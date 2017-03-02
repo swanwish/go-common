@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,4 +23,16 @@ func GetCurrentDirectory() (string, error) {
 		return "", err
 	}
 	return strings.Replace(dir, "\\", "/", -1), nil
+}
+
+func SaveFile(filePath string, data []byte) error {
+	fileDir := filepath.Dir(filePath)
+	if !FileExists(fileDir) {
+		err := os.MkdirAll(fileDir, 0755)
+		if err != nil {
+			logs.Errorf("Failed to create dir %s, the error is %v", fileDir, err)
+			return err
+		}
+	}
+	return ioutil.WriteFile(filePath, data, 0755)
 }

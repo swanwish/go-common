@@ -31,6 +31,21 @@ func GetConnectionGetFunc(id string) func() (*sqlx.DB, error) {
 	}
 }
 
+func GetConnectionWithDriverAndDsn(driver, dsn string) func() (*sqlx.DB, error) {
+	return func() (*sqlx.DB, error) {
+		if driver == "" || dsn == "" {
+			logs.Errorf("The driver or dsn is not specified.")
+			return nil, ErrConfigurationMissing
+		}
+		db, err := sqlx.Open(driver, dsn)
+		return db, err
+	}
+}
+
 func GetDBConnection(id string) DB {
 	return DefaultDB{ConnectionGetterFunc: GetConnectionGetFunc(id)}
+}
+
+func GetDBConnectionWithDriverAndDsn(driver, dsn string) DB {
+	return DefaultDB{ConnectionGetterFunc: GetConnectionWithDriverAndDsn(driver, dsn)}
 }
