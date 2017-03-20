@@ -2,13 +2,14 @@ package web
 
 import (
 	"encoding/gob"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
-
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -259,4 +260,16 @@ func (ctx HandlerContext) GetLoginUser() *LoginUser {
 		return loginUser.(*LoginUser)
 	}
 	return nil
+}
+
+func (ctx HandlerContext) Popular(v interface{}) error {
+	objT := reflect.TypeOf(v)
+	objV := reflect.ValueOf(v)
+	if !isStructPtr(objT) {
+		return fmt.Errorf("%v must be  a struct pointer", v)
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+
+	return populateFormToStruct(ctx, objT, objV)
 }

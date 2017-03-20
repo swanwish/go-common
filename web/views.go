@@ -2,7 +2,6 @@ package web
 
 import (
 	"encoding/json"
-	"errors"
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
@@ -46,10 +45,6 @@ var (
 	viewTemplateCache = make(map[string]*template.Template, 0)
 	DefaultViewId     string
 	LoginViewId       string
-
-	ErrConfigurationFileNotExist = errors.New("Configuration file not exist")
-	ErrNoSuchView                = errors.New("No such view")
-	ErrInvalidConfiguration      = errors.New("Invalid configuration")
 
 	ProductMode bool
 )
