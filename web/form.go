@@ -134,7 +134,7 @@ func populateFormToStruct(ctx HandlerContext, objT reflect.Type, objV reflect.Va
 				if err != nil {
 					return err
 				}
-				if fieldType == "zero.Int" {
+				if fieldType == "zero.Float" {
 					realValue = zero.FloatFrom(x)
 				} else {
 					realValue = null.FloatFrom(x)
