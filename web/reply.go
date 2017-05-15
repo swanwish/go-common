@@ -9,6 +9,9 @@ import (
 
 func (ctx HandlerContext) ReplyText(text string) {
 	ctx.W.Header().Set("Content-Type", ContentTypePlain)
+	if enableCors {
+		ctx.EnableCors(enableCors)
+	}
 	ctx.W.Write([]byte(text))
 }
 
@@ -78,6 +81,9 @@ func (ctx HandlerContext) ReplyHtml(html string) {
 
 func (ctx HandlerContext) ReplyData(contentType string, data []byte) {
 	ctx.W.Header().Set("Content-Type", contentType)
+	if enableCors {
+		ctx.EnableCors(enableCors)
+	}
 	ctx.W.Write(data)
 }
 

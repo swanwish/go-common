@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
@@ -32,25 +31,6 @@ type LoginUser struct {
 	LoginName   string
 	DisplayName string
 	Email       string
-}
-
-var (
-	sessionName string
-	store       *sessions.CookieStore
-	storeLock   = &sync.Mutex{}
-)
-
-func SetSessionName(name string) {
-	sessionName = name
-	logs.Debugf("The session name is %s", sessionName)
-}
-
-func getSessionName() string {
-	if sessionName == "" {
-		sessionName = utils.GenerateRandomStringEx(utils.RandomTypeCapitalString|utils.RandomTypeLowercaseChar|utils.RandomTypeDigital, SessionKeyLength)
-		logs.Debugf("The session name is %s", sessionName)
-	}
-	return sessionName
 }
 
 func InitCookieStore(keyPairs ...[]byte) {
@@ -258,4 +238,8 @@ func (ctx HandlerContext) GetLoginUser() *LoginUser {
 		return loginUser.(*LoginUser)
 	}
 	return nil
+}
+
+func (ctx HandlerContext) EnableCors(enableCORS bool) {
+	ctx.W.Header().Set("Access-Control-Allow-Origin", "*")
 }
