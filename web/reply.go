@@ -72,6 +72,8 @@ func (ctx HandlerContext) ReplyJsonObject(object interface{}) {
 		return
 	}
 
+	logs.Debugf("The reply data is %s", string(js))
+
 	ctx.ReplyData(ContentTypeJson, js)
 }
 
