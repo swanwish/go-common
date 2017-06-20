@@ -36,8 +36,10 @@ type FilePageInfo struct {
 type UploadedFileInfo struct {
 	FileId           string `json:"fileId"`
 	FilePath         string `json:"filePath"`
+	DestFilePath     string `json:"-"`
 	FileType         string `json:"fileType"`
 	OriginalFileName string `json:"originalFileName"`
 	FileSize         int64  `json:"fileSize"`
 	CreateTime       int64  `json:"createTime"`
+	MD5              string `json:"md5"`
 }

@@ -6,7 +6,11 @@ import (
 )
 
 func GetMD5Hash(text string) string {
+	return GetByteMD5Hash([]byte(text))
+}
+
+func GetByteMD5Hash(content []byte) string {
 	hasher := md5.New()
-	hasher.Write([]byte(text))
+	hasher.Write(content)
 	return hex.EncodeToString(hasher.Sum(nil))
 }

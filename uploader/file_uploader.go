@@ -3,6 +3,7 @@ package uploader
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,24 +22,24 @@ type UploadHandler struct {
 	FuncGetPageInfo     func(web.HandlerContext) (FilePageInfo, error)
 	FuncModifyFile      func(web.HandlerContext) error
 	FuncPostFilePage    func(web.HandlerContext) error
+
+	FileDownloadPrefix string
 }
 
-func (h UploadHandler) UploadFiles(ctx web.HandlerContext) {
-	fileInfo, err := handleUploadFile(ctx, "file", h.FileUploadPath)
+func (h UploadHandler) UploadFiles(ctx web.HandlerContext) (UploadedFileInfo, error) {
+	fileInfo, err := HandleUploadFile(ctx, "file", h.FileUploadPath)
 	if err != nil {
 		logs.Errorf("Failed to handle upload file")
-		ctx.ReplyInvalidParameterError()
-		return
+		return UploadedFileInfo{}, err
 	}
 	if h.FuncSaveFileInfo != nil {
 		fileInfo.FileId, err = h.FuncSaveFileInfo(ctx, fileInfo)
 		if err != nil {
 			logs.Errorf("Failed to save uploaded file information, the error is %v", err)
-			ctx.ReplyInternalError()
-			return
+			return UploadedFileInfo{}, err
 		}
 	}
-	ctx.ReplyJsonData(fileInfo)
+	return fileInfo, nil
 }
 
 func (h UploadHandler) DownloadFile(ctx web.HandlerContext) {
@@ -125,7 +126,7 @@ func (h UploadHandler) ModifyFile(ctx web.HandlerContext) {
 	ctx.ReplyJsonData(nil)
 }
 
-func handleUploadFile(ctx web.HandlerContext, formFileName, fileUploadPath string) (UploadedFileInfo, error) {
+func HandleUploadFile(ctx web.HandlerContext, formFileName, fileUploadPath string) (UploadedFileInfo, error) {
 	fileInfo := UploadedFileInfo{}
 	ctx.R.ParseMultipartForm(32 << 20)
 	inputFile, handler, err := ctx.R.FormFile(formFileName)
@@ -137,24 +138,36 @@ func handleUploadFile(ctx web.HandlerContext, formFileName, fileUploadPath strin
 	originalFileName := handler.Filename
 	fileInfo.OriginalFileName = originalFileName
 	lastDotIndex := strings.LastIndex(originalFileName, ".")
-	destFileName, err := utils.RandomKey()
-	if err != nil {
-		logs.Errorf("Failed to generate random file name.")
-		return fileInfo, err
-	}
 
 	fileType := FILE_TYPE_FILES
+	extension := "dat"
 	if lastDotIndex > 0 {
-		extension := originalFileName[lastDotIndex+1:]
+		extension = originalFileName[lastDotIndex+1:]
 		fileType = GetFileType(extension)
-		destFileName = fmt.Sprintf("%s.%s", destFileName, extension)
 	}
-
 	fileInfo.FileType = fileType
 
-	now := time.Now()
-	fileDir := filepath.Join(fileType, fmt.Sprintf("%d", now.Year()), fmt.Sprintf("%02d", now.Month()))
-	fileDest := filepath.Join(fileUploadPath, fileDir)
+	var (
+		destDir      string
+		destFileName string
+	)
+	filePath := ctx.FormValue("filePath")
+	if filePath != "" {
+		logs.Debugf("The file path is %s", filePath)
+		destDir = filepath.Dir(filePath)
+		destFileName = filepath.Base(filePath)
+	} else {
+		destFileName, err = utils.RandomKey()
+		if err != nil {
+			logs.Errorf("Failed to generate random file name.")
+			return fileInfo, err
+		}
+		destFileName = fmt.Sprintf("%s.%s", destFileName, extension)
+		now := time.Now()
+		destDir = filepath.Join(fileType, fmt.Sprintf("%d", now.Year()), fmt.Sprintf("%02d", now.Month()), fmt.Sprintf("%02d", now.Day()))
+	}
+
+	fileDest := filepath.Join(fileUploadPath, destDir)
 
 	if !utils.FileExists(fileDest) {
 		err = os.MkdirAll(fileDest, 0777)
@@ -165,7 +178,9 @@ func handleUploadFile(ctx web.HandlerContext, formFileName, fileUploadPath strin
 	}
 
 	destFilePath := filepath.Join(fileDest, destFileName)
-	fileInfo.FilePath = filepath.Join(fileDir, destFileName)
+	logs.Debugf("handleUploadFile the destfilepath is %s", destFilePath)
+	fileInfo.FilePath = filepath.Join(destDir, destFileName)
+	fileInfo.DestFilePath = destFilePath
 	f, err := os.OpenFile(destFilePath, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logs.Errorf("Failed to open file, the error is %v", err)
@@ -178,6 +193,14 @@ func handleUploadFile(ctx web.HandlerContext, formFileName, fileUploadPath strin
 		return fileInfo, err
 	}
 	fileInfo.FileSize = int64(written)
+
+	content, err := ioutil.ReadFile(destFilePath)
+	if err != nil {
+		logs.Errorf("Failed to read file %s, the error is %v", destFilePath, err)
+		return fileInfo, err
+	}
+	fileInfo.MD5 = utils.GetByteMD5Hash(content)
+
 	//if settings.OssClient != nil {
 	//	logs.Debugf("Will create object %s", fmt.Sprintf("/%s/%s", common.OSSImageBucket, destFilePath))
 	//	err = common.OssClient.CreateObject(fmt.Sprintf("/%s/%s", common.OSSImageBucket, destFilePath), destFilePath)
