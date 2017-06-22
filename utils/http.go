@@ -54,9 +54,14 @@ func GetUrlContent(url string) (int, []byte, error) {
 	return response.StatusCode, contents, nil
 }
 
-func PostUrlContent(url string, content []byte) (int, []byte, error) {
+func PostUrlContent(url string, content []byte, headers http.Header) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(content))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	if headers != nil {
+		for key, value := range headers {
+			req.Header[key] = value
+		}
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -86,7 +91,7 @@ func request(method, url string, data url.Values, headers http.Header) (int, []b
 		logs.Errorf("Failed to get request, the error is %v", err)
 		return http.StatusInternalServerError, nil, err
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	if headers != nil {
 		for key, value := range headers {
