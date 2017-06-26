@@ -77,26 +77,35 @@ func PostUrlContent(url string, content []byte, headers http.Header) (int, []byt
 }
 
 func PostRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
-	return Request("POST", url, data, headers)
+	if headers != nil && headers.Get("Content-Type") == "" {
+		headers.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	}
+	return Request("POST", url, data.Encode(), headers)
 }
 
 func GetRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
-	return Request("GET", url, data, headers)
+	if headers != nil && headers.Get("Content-Type") == "" {
+		headers.Set("Content-Type", "application/json; charset=utf-8")
+	}
+	return Request("GET", url, data.Encode(), headers)
 }
 
 func PutRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
-	return Request("PUT", url, data, headers)
+	if headers != nil && headers.Get("Content-Type") == "" {
+		headers.Set("Content-Type", "application/json; charset=utf-8")
+	}
+	return Request("PUT", url, data.Encode(), headers)
 }
 
-func Request(method, url string, data url.Values, headers http.Header) (int, []byte, error) {
+func Request(method, url string, content string, headers http.Header) (int, []byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest(method, url, bytes.NewBufferString(content))
 	if err != nil {
 		logs.Errorf("Failed to get request, the error is %v", err)
 		return http.StatusInternalServerError, nil, err
 	}
 	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	req.Header.Add("Content-Length", strconv.Itoa(len(content)))
 	if headers != nil {
 		for key, value := range headers {
 			req.Header[key] = value
