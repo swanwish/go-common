@@ -77,21 +77,25 @@ func PostUrlContent(url string, content []byte, headers http.Header) (int, []byt
 }
 
 func PostRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
-	return request("POST", url, data, headers)
+	return Request("POST", url, data, headers)
 }
 
 func GetRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
-	return request("GET", url, data, headers)
+	return Request("GET", url, data, headers)
 }
 
-func request(method, url string, data url.Values, headers http.Header) (int, []byte, error) {
+func PutRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
+	return Request("PUT", url, data, headers)
+}
+
+func Request(method, url string, data url.Values, headers http.Header) (int, []byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, bytes.NewBufferString(data.Encode()))
 	if err != nil {
 		logs.Errorf("Failed to get request, the error is %v", err)
 		return http.StatusInternalServerError, nil, err
 	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	req.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	if headers != nil {
 		for key, value := range headers {
