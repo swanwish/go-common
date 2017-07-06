@@ -17,18 +17,20 @@ var (
 	ErrAlreadyExists = errors.New("Already exists")
 )
 
-func DownloadFromUrl(rawUrl, dest string) error {
+func DownloadFromUrl(rawUrl, dest, filePath string) error {
 	u, err := url.Parse(rawUrl)
 	if err != nil {
 		logs.Errorf("The url %s is invalid, the error is %v", rawUrl, err)
 		return err
 	}
-	fileName := ""
-	logs.Debugf("The path is %s", u.Path)
-	path := u.Path
-	lastSplashIndex := strings.LastIndex(path, "/")
+	//fileName := ""
+	if filePath == "" {
+		logs.Debugf("The path is %s", u.Path)
+		filePath = u.Path
+	}
+	lastSplashIndex := strings.LastIndex(filePath, "/")
 	if lastSplashIndex != -1 {
-		parentPath := path[:lastSplashIndex]
+		parentPath := filePath[:lastSplashIndex]
 		logs.Debugf("The parent path is %s", parentPath)
 		destDir := filepath.Join(dest, parentPath) // fmt.Sprintf("%s%s", dest, parentPath)
 		if err := os.MkdirAll(destDir, 0755); err != nil {
@@ -38,7 +40,7 @@ func DownloadFromUrl(rawUrl, dest string) error {
 		//fileName = path[lastSplashIndex+1:]
 		//logs.Debugf("The file name is %s", fileName)
 	}
-	destFilePath := filepath.Join(dest, path) // fmt.Sprintf("%s%s", dest, path)
+	destFilePath := filepath.Join(dest, filePath) // fmt.Sprintf("%s%s", dest, path)
 	if FileExists(destFilePath) {
 		logs.Debugf("The file %s already exists", destFilePath)
 		return ErrAlreadyExists
@@ -59,7 +61,7 @@ func DownloadFromUrl(rawUrl, dest string) error {
 
 	output, err := os.Create(destFilePath)
 	if err != nil {
-		logs.Errorf("Error while creating %s, the error is %v", fileName, err)
+		logs.Errorf("Error while creating %s, the error is %v", filePath, err)
 		return err
 	}
 	defer output.Close()
