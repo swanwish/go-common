@@ -15,6 +15,13 @@ func logRequest(r *http.Request) {
 	logs.Debugf("%s %v from ip: %s", r.Method, r.URL, ip)
 }
 
+func MakeLogEnableRawHandler(fn func(rw http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		logRequest(r)
+		fn(rw, r)
+	}
+}
+
 func MakeLogEnabledHandler(fn func(HandlerContext)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		logRequest(r)
