@@ -12,7 +12,7 @@ import (
 	"github.com/swanwish/go-common/logs"
 )
 
-func (ctx HandlerContext) PopularForm(v interface{}) error {
+func (ctx HandlerContext) PopulateForm(v interface{}) error {
 	objT := reflect.TypeOf(v)
 	objV := reflect.ValueOf(v)
 	if !isStructPtr(objT) {
