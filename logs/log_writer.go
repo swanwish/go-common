@@ -15,10 +15,12 @@ type LogWriter interface {
 	Logf(level int64, key, format string, v ...interface{})
 	Debug(v ...interface{})
 	Info(v ...interface{})
+	Warn(v ...interface{})
 	Error(v ...interface{})
 	Fatal(v ...interface{})
 	Debugf(formatString string, v ...interface{})
 	Infof(formatString string, v ...interface{})
+	Warnf(formatString string, v ...interface{})
 	Errorf(formatString string, v ...interface{})
 	Fatalf(formatString string, v ...interface{})
 }
@@ -42,6 +44,10 @@ func (w DefaultLogWriter) Info(v ...interface{}) {
 	Log(LOG_LEVEL_INFO, EMPTY_KEY, v...)
 }
 
+func (w DefaultLogWriter) Warn(v ...interface{}) {
+	Log(LOG_LEVEL_WARN, EMPTY_KEY, v...)
+}
+
 func (w DefaultLogWriter) Error(v ...interface{}) {
 	Log(LOG_LEVEL_ERROR, EMPTY_KEY, v...)
 }
@@ -56,6 +62,10 @@ func (w DefaultLogWriter) Debugf(formatString string, v ...interface{}) {
 
 func (w DefaultLogWriter) Infof(formatString string, v ...interface{}) {
 	Logf(LOG_LEVEL_INFO, EMPTY_KEY, formatString, v...)
+}
+
+func (w DefaultLogWriter) Warnf(formatString string, v ...interface{}) {
+	Logf(LOG_LEVEL_WARN, EMPTY_KEY, formatString, v...)
 }
 
 func (w DefaultLogWriter) Errorf(formatString string, v ...interface{}) {

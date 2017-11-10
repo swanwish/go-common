@@ -9,6 +9,7 @@ import (
 const (
 	LOG_LEVEL_DEBUG int64 = 1 + iota
 	LOG_LEVEL_INFO
+	LOG_LEVEL_WARN
 	LOG_LEVEL_ERROR
 	LOG_LEVEL_FATAL
 )
@@ -23,6 +24,7 @@ func init() {
 
 	logLevelText[LOG_LEVEL_DEBUG] = "debug"
 	logLevelText[LOG_LEVEL_INFO] = "info"
+	logLevelText[LOG_LEVEL_WARN] = "warn"
 	logLevelText[LOG_LEVEL_ERROR] = "error"
 	logLevelText[LOG_LEVEL_FATAL] = "fatal"
 }
@@ -62,6 +64,12 @@ func Info(v ...interface{}) {
 	}
 }
 
+func Warn(v ...interface{}) {
+	if Writer != nil {
+		Writer.Warn(v...)
+	}
+}
+
 func Error(v ...interface{}) {
 	if Writer != nil {
 		Writer.Error(v...)
@@ -83,6 +91,12 @@ func Debugf(formatString string, v ...interface{}) {
 func Infof(formatString string, v ...interface{}) {
 	if Writer != nil {
 		Writer.Infof(formatString, v...)
+	}
+}
+
+func Warnf(formatString string, v ...interface{}) {
+	if Writer != nil {
+		Writer.Warnf(formatString, v...)
 	}
 }
 
