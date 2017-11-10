@@ -55,6 +55,10 @@ func (w EMailLogWriter) Info(v ...interface{}) {
 	w.Log(LOG_LEVEL_INFO, EMPTY_KEY, v...)
 }
 
+func (w EMailLogWriter) Warn(v ...interface{}) {
+	w.Log(LOG_LEVEL_WARN, EMPTY_KEY, v...)
+}
+
 func (w EMailLogWriter) Error(v ...interface{}) {
 	w.Log(LOG_LEVEL_ERROR, EMPTY_KEY, v...)
 }
@@ -69,6 +73,10 @@ func (w EMailLogWriter) Debugf(formatString string, v ...interface{}) {
 
 func (w EMailLogWriter) Infof(formatString string, v ...interface{}) {
 	w.Logf(LOG_LEVEL_INFO, EMPTY_KEY, formatString, v...)
+}
+
+func (w EMailLogWriter) Warnf(formatString string, v ...interface{}) {
+	w.Logf(LOG_LEVEL_WARN, EMPTY_KEY, formatString, v...)
 }
 
 func (w EMailLogWriter) Errorf(formatString string, v ...interface{}) {
