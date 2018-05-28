@@ -12,6 +12,11 @@ import (
 	"github.com/swanwish/go-common/logs"
 )
 
+const (
+	EmptyUsername = ""
+	EmptyPassword = ""
+)
+
 func GetFullUrl(path, baseUrl string) string {
 	if strings.Index(path, "://") != -1 {
 		return path
@@ -55,12 +60,19 @@ func GetUrlContent(url string) (int, []byte, error) {
 }
 
 func PostUrlContent(url string, content []byte, headers http.Header) (int, []byte, error) {
+	return PostUrlContentWithBasicAuth(url, EmptyUsername, EmptyPassword, content, headers)
+}
+
+func PostUrlContentWithBasicAuth(url, username, password string, content []byte, headers http.Header) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(content))
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	if headers != nil {
 		for key, value := range headers {
 			req.Header[key] = value
 		}
+	}
+	if username != "" || password != "" {
+		req.SetBasicAuth(username, password)
 	}
 
 	client := &http.Client{}
@@ -80,24 +92,24 @@ func PostRequest(url string, data url.Values, headers http.Header) (int, []byte,
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	}
-	return Request("POST", url, data.Encode(), headers)
+	return Request("POST", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
 }
 
 func GetRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("GET", url, data.Encode(), headers)
+	return Request("GET", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
 }
 
 func PutRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("PUT", url, data.Encode(), headers)
+	return Request("PUT", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
 }
 
-func Request(method, url string, content string, headers http.Header) (int, []byte, error) {
+func Request(method, url, username, password, content string, headers http.Header) (int, []byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, bytes.NewBufferString(content))
 	if err != nil {
@@ -110,6 +122,10 @@ func Request(method, url string, content string, headers http.Header) (int, []by
 		for key, value := range headers {
 			req.Header[key] = value
 		}
+	}
+
+	if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
 	}
 
 	resp, err := client.Do(req)
