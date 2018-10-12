@@ -36,3 +36,16 @@ func SaveFile(filePath string, data []byte) error {
 	}
 	return ioutil.WriteFile(filePath, data, 0755)
 }
+
+func DeleteFile(filePath string) error {
+	if FileExists(filePath) {
+		logs.Debugf("Delete file %s", filePath)
+		err := os.Remove(filePath)
+		if err != nil {
+			logs.Errorf("Failed to delete file %s, the error is %#v", filePath, err)
+		}
+		return err
+	}
+	logs.Errorf("The file path %s does not exists", filePath)
+	return os.ErrNotExist
+}
