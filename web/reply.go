@@ -12,7 +12,7 @@ func (ctx HandlerContext) ReplyText(text string) {
 	if enableCors {
 		ctx.EnableCors(enableCors)
 	}
-	ctx.W.Write([]byte(text))
+	_, _ = ctx.W.Write([]byte(text))
 }
 
 func (ctx HandlerContext) ReplyOK() {
@@ -86,7 +86,7 @@ func (ctx HandlerContext) ReplyData(contentType string, data []byte) {
 	if enableCors {
 		ctx.EnableCors(enableCors)
 	}
-	ctx.W.Write(data)
+	_, _ = ctx.W.Write(data)
 }
 
 func (ctx HandlerContext) ReplyJsonData(data interface{}) {

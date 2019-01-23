@@ -97,7 +97,7 @@ func (ctx HandlerContext) FormValue(key string) string {
 
 func (ctx HandlerContext) FormValues(key string) []string {
 	if ctx.R.Form == nil {
-		ctx.R.ParseMultipartForm(defaultMaxMemory)
+		_ = ctx.R.ParseMultipartForm(defaultMaxMemory)
 	}
 	return ctx.R.Form[key]
 }
@@ -229,7 +229,7 @@ func (ctx HandlerContext) DeleteSessionKey(key interface{}) {
 
 func (ctx HandlerContext) SaveSession() {
 	session := ctx.GetSession()
-	session.Save(ctx.R, ctx.W)
+	_ = session.Save(ctx.R, ctx.W)
 }
 
 func (ctx HandlerContext) GetLoginUser() *LoginUser {
@@ -242,4 +242,10 @@ func (ctx HandlerContext) GetLoginUser() *LoginUser {
 
 func (ctx HandlerContext) EnableCors(enableCORS bool) {
 	ctx.W.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func (ctx HandlerContext) AddHeaders(headers map[string]string) {
+	for key, value := range headers {
+		ctx.W.Header().Set(key, value)
+	}
 }
