@@ -244,6 +244,10 @@ func (ctx HandlerContext) EnableCors(enableCORS bool) {
 	ctx.W.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+func (ctx HandlerContext) IsCorsEnabled() bool {
+	return enableCors
+}
+
 func (ctx HandlerContext) AddHeaders(headers map[string]string) {
 	for key, value := range headers {
 		ctx.W.Header().Set(key, value)
