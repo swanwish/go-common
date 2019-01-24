@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/gob"
+	"encoding/json"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -176,6 +177,14 @@ func (ctx *HandlerContext) BodyIntValue(key string) int64 {
 		}
 	}
 	return 0
+}
+
+func (ctx *HandlerContext) UnmarshalJsonBody(dest interface{}) error {
+	requestContent, err := ctx.GetRequestContent()
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(requestContent, dest)
 }
 
 func (ctx HandlerContext) Redirect(url string, code int) {
