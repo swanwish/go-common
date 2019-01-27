@@ -7,7 +7,7 @@ import (
 	"github.com/swanwish/go-common/logs"
 )
 
-func logRequest(r *http.Request) {
+func LogRequest(r *http.Request) {
 	ip := r.Header.Get("X-Real-IP")
 	if ip == "" {
 		ip, _, _ = net.SplitHostPort(r.RemoteAddr)
@@ -17,14 +17,14 @@ func logRequest(r *http.Request) {
 
 func MakeLogEnableRawHandler(fn func(rw http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		logRequest(r)
+		LogRequest(r)
 		fn(rw, r)
 	}
 }
 
 func MakeLogEnabledHandler(fn func(HandlerContext)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		logRequest(r)
+		LogRequest(r)
 		ctx := HandlerContext{W: rw, R: r}
 		fn(ctx)
 	}
@@ -36,7 +36,7 @@ func MakeSessionCheckHandler(fn func(SessionHandlerContext)) http.HandlerFunc {
 
 func MakeSessionCheckHandlerWithCallback(fn func(SessionHandlerContext), errorCallback func(ctx HandlerContext)) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		logRequest(r)
+		LogRequest(r)
 		handlerContext := HandlerContext{W: rw, R: r}
 		loginUser := handlerContext.GetSessionValue(SessionKeyLoginUser)
 		if loginUser == nil {
