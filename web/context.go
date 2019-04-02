@@ -166,6 +166,21 @@ func (ctx *HandlerContext) BodyValue(key string) string {
 	return ctx.bodyValues[key]
 }
 
+func (ctx *HandlerContext) JsonData(dst interface{}) error {
+	buf, err := ioutil.ReadAll(ctx.R.Body)
+	if err != nil {
+		logs.Errorf("Failed to read content from request, the error is %v", err)
+		return err
+	}
+
+	err = json.Unmarshal(buf, dst)
+	if err != nil {
+		logs.Errorf("Failed to unmarshal the request body, the error is %v", err)
+		return err
+	}
+	return nil
+}
+
 func (ctx *HandlerContext) BodyIntValue(key string) int64 {
 	value := ctx.BodyValue(key)
 	if value != "" {
