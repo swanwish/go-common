@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/sessions"
@@ -13,13 +14,17 @@ import (
 const (
 	KeyEnableUserIdentity        = "enable_user_identity"
 	KeyValidUserIdentityListJson = "valid_user_identity_list_json"
+	KeyAllowedRefers             = "allowed_refers"
+	KeyEnableCors                = "enable_cors"
 )
 
 var (
-	sessionName string
-	store       *sessions.CookieStore
-	storeLock   = &sync.Mutex{}
-	enableCors  = false
+	sessionName       string
+	store             *sessions.CookieStore
+	storeLock         = &sync.Mutex{}
+	enableCors        = false
+	AllowedRefers     []string
+	ReferCheckEnabled bool
 )
 
 func SetSessionName(name string) {
@@ -64,6 +69,30 @@ func LoadSettings() {
 			logs.Infof("Identity check enabled")
 		} else {
 			logs.Info("Identity check is disabled")
+		}
+	}
+	AllowedRefers = []string{}
+	ReferCheckEnabled = false
+	if allowedRefers, err := config.Get(KeyAllowedRefers); err == nil && allowedRefers != "" {
+		refers := strings.Split(allowedRefers, ",")
+		for _, refer := range refers {
+			refer := strings.TrimSpace(refer)
+			if refer != "" {
+				AllowedRefers = append(AllowedRefers, refer)
+				ReferCheckEnabled = true
+			}
+		}
+	}
+	if ReferCheckEnabled {
+		logs.Infof("The allowed refers are %+v", AllowedRefers)
+	} else {
+		logs.Infof("The allowed refer is not enabled")
+	}
+
+	if enableCors, err := config.GetInt(KeyEnableCors); err == nil {
+		if enableCors == 1 {
+			logs.Infof("The cors is enabled")
+			SetEnableCors(true)
 		}
 	}
 }
