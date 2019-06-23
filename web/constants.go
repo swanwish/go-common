@@ -11,8 +11,8 @@ const (
 const (
 	StatusCodeOK               = 200
 	StatusCodeInvalidParameter = 400
-	StatusCodeForbidden        = 401
 	StatusCodeTokenInvalid     = 401
+	StatusCodeForbidden        = 403
 	StatusCodeNotExists        = 404
 	StatusCodeInternalError    = 500
 )
