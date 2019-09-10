@@ -34,7 +34,7 @@ func SaveFile(filePath string, data []byte) error {
 			return err
 		}
 	}
-	return ioutil.WriteFile(filePath, data, 0755)
+	return ioutil.WriteFile(filePath, data, 0644)
 }
 
 func DeleteFile(filePath string) error {
