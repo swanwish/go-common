@@ -49,7 +49,9 @@ func GetUrlContent(url string) (int, []byte, error) {
 		logs.Errorf("Failed to get content from url %s, the error is %v", url, err)
 		return http.StatusInternalServerError, nil, err
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	contents, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -65,6 +67,10 @@ func PostUrlContent(url string, content []byte, headers http.Header) (int, []byt
 
 func PostUrlContentWithBasicAuth(url, username, password string, content []byte, headers http.Header) (int, []byte, error) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(content))
+	if err != nil {
+		logs.Errorf("Failed to create request, the error is %#v", err)
+		return http.StatusBadRequest, nil, err
+	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	if headers != nil {
 		for key, value := range headers {
@@ -81,7 +87,9 @@ func PostUrlContentWithBasicAuth(url, username, password string, content []byte,
 		logs.Errorf("Failed to post content, the error is %v", err)
 		return http.StatusInternalServerError, nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	logs.Debugf("The content is %s", string(body))
@@ -92,21 +100,21 @@ func PostRequest(url string, data url.Values, headers http.Header) (int, []byte,
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	}
-	return Request("POST", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
+	return Request("POST", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
 }
 
 func GetRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("GET", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
+	return Request("GET", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
 }
 
 func PutRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("PUT", EmptyUsername, EmptyPassword, url, data.Encode(), headers)
+	return Request("PUT", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
 }
 
 func Request(method, url, username, password, content string, headers http.Header) (int, []byte, error) {
@@ -133,7 +141,9 @@ func Request(method, url, username, password, content string, headers http.Heade
 		logs.Errorf("Failed to post content, the error is %v", err)
 		return http.StatusInternalServerError, nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, _ := ioutil.ReadAll(resp.Body)
 	logs.Debugf("The content is %s", string(body))
