@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	ErrorMessage_GetConnectionFailed  = "Failed to get database connection"
-	ErrorMessageNoConnectionProvider  = "Connection provider not specified"
-	ErrorMessageNoTransactionFunction = "Transaction function not specified"
+	ErrorMessageGetConnectionFailed   = "failed to get database connection"
+	ErrorMessageNoConnectionProvider  = "connection provider not specified"
+	ErrorMessageNoTransactionFunction = "transaction function not specified"
 )
 
 var (
@@ -53,10 +53,12 @@ func (d DefaultDB) Select(dest interface{}, query string, args ...interface{}) e
 	logSql(logs.LOG_LEVEL_DEBUG, query, nil, args...)
 	dbConnection, err := d.ConnectionGetterFunc()
 	if err != nil {
-		logs.Error(ErrorMessage_GetConnectionFailed, err)
+		logs.Error(ErrorMessageGetConnectionFailed, err)
 		return err
 	}
-	defer dbConnection.Close()
+	defer func() {
+		_ = dbConnection.Close()
+	}()
 
 	err = dbConnection.Select(dest, query, args...)
 	if err != nil {
@@ -68,10 +70,12 @@ func (d DefaultDB) Select(dest interface{}, query string, args ...interface{}) e
 func (d DefaultDB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	dbConnection, err := d.GetConnection()
 	if err != nil {
-		logs.Error(ErrorMessage_GetConnectionFailed, err)
+		logs.Error(ErrorMessageGetConnectionFailed, err)
 		return nil, err
 	}
-	defer dbConnection.Close()
+	defer func() {
+		_ = dbConnection.Close()
+	}()
 
 	logSql(logs.LOG_LEVEL_DEBUG, query, nil, args...)
 	result, err := dbConnection.Exec(query, args...)
@@ -84,10 +88,12 @@ func (d DefaultDB) Exec(query string, args ...interface{}) (sql.Result, error) {
 func (d DefaultDB) Get(dest interface{}, query string, args ...interface{}) error {
 	dbConnection, err := d.GetConnection()
 	if err != nil {
-		logs.Error(ErrorMessage_GetConnectionFailed, err)
+		logs.Error(ErrorMessageGetConnectionFailed, err)
 		return err
 	}
-	defer dbConnection.Close()
+	defer func() {
+		_ = dbConnection.Close()
+	}()
 
 	logSql(logs.LOG_LEVEL_DEBUG, query, nil, args...)
 	err = dbConnection.Get(dest, query, args...)
@@ -141,17 +147,19 @@ func (d DefaultDB) InTransaction(TransactionFunc func(*sql.Tx) error) error {
 
 	dbConnection, err := d.GetConnection()
 	if err != nil {
-		logs.Errorf(ErrorMessage_GetConnectionFailed, err)
+		logs.Errorf(ErrorMessageGetConnectionFailed, err)
 		return err
 	}
-	defer dbConnection.Close()
+	defer func() {
+		_ = dbConnection.Close()
+	}()
 
 	tx, err := dbConnection.Begin()
 	err = TransactionFunc(tx)
 
 	if err != nil {
 		logs.Errorf("Failed to execute transaction function, the error is %v", err)
-		tx.Rollback()
+		_ = tx.Rollback()
 		return err
 	}
 
@@ -172,7 +180,7 @@ func (d DefaultDB) InTransactionx(TransactionFunc func(*sqlx.Tx) error) error {
 
 	dbConnection, err := d.GetConnection()
 	if err != nil {
-		logs.Errorf(ErrorMessage_GetConnectionFailed, err)
+		logs.Errorf(ErrorMessageGetConnectionFailed, err)
 		return err
 	}
 	defer func() {
