@@ -33,6 +33,7 @@ type DB interface {
 	GetInt(query string, args ...interface{}) (int64, error)
 	GetConnection() (*sqlx.DB, error)
 	InTransaction(func(*sql.Tx) error) error
+	InTransactionx(func(*sqlx.Tx) error) error
 }
 
 var (
@@ -151,6 +152,39 @@ func (d DefaultDB) InTransaction(TransactionFunc func(*sql.Tx) error) error {
 	if err != nil {
 		logs.Errorf("Failed to execute transaction function, the error is %v", err)
 		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+
+}
+
+func (d DefaultDB) InTransactionx(TransactionFunc func(*sqlx.Tx) error) error {
+	if TransactionFunc == nil {
+		logs.Errorf(ErrorMessageNoTransactionFunction)
+		return ErrNoTransactionFunction
+	}
+
+	if d.ConnectionGetterFunc == nil {
+		logs.Errorf(ErrorMessageNoConnectionProvider)
+		return ErrNoConnectionProvider
+	}
+
+	dbConnection, err := d.GetConnection()
+	if err != nil {
+		logs.Errorf(ErrorMessage_GetConnectionFailed, err)
+		return err
+	}
+	defer func() {
+		_ = dbConnection.Close()
+	}()
+
+	tx, err := dbConnection.Beginx()
+	err = TransactionFunc(tx)
+
+	if err != nil {
+		logs.Errorf("Failed to execute transaction function, the error is %v", err)
+		_ = tx.Rollback()
 		return err
 	}
 
