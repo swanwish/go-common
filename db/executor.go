@@ -26,6 +26,11 @@ type SqlExecutor interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 }
 
+type SqlExecutorx interface {
+	Select(dest interface{}, query string, args ...interface{}) error
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
+
 type DB interface {
 	Select(dest interface{}, query string, args ...interface{}) error
 	Exec(query string, args ...interface{}) (sql.Result, error)
