@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/swanwish/go-common/logs"
 )
@@ -15,6 +15,7 @@ import (
 var (
 	ErrInvalidStatus = errors.New("Invalid status")
 	ErrAlreadyExists = errors.New("Already exists")
+	ErrNotFound      = errors.New("not found")
 )
 
 func DownloadFromUrl(rawUrl, dest, filePath string) error {
@@ -28,18 +29,7 @@ func DownloadFromUrl(rawUrl, dest, filePath string) error {
 		logs.Debugf("The path is %s", u.Path)
 		filePath = u.Path
 	}
-	lastSplashIndex := strings.LastIndex(filePath, "/")
-	if lastSplashIndex != -1 {
-		parentPath := filePath[:lastSplashIndex]
-		logs.Debugf("The parent path is %s", parentPath)
-		destDir := filepath.Join(dest, parentPath) // fmt.Sprintf("%s%s", dest, parentPath)
-		if err := os.MkdirAll(destDir, 0755); err != nil {
-			logs.Errorf("Failed to create dir %s, the error is %v", destDir, err)
-			return err
-		}
-		//fileName = path[lastSplashIndex+1:]
-		//logs.Debugf("The file name is %s", fileName)
-	}
+
 	destFilePath := filepath.Join(dest, filePath) // fmt.Sprintf("%s%s", dest, path)
 	if FileExists(destFilePath) {
 		logs.Debugf("The file %s already exists", destFilePath)
@@ -52,11 +42,24 @@ func DownloadFromUrl(rawUrl, dest, filePath string) error {
 		logs.Errorf("Error while downloading from %s, the error is %v", rawUrl, err)
 		return err
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	if response.StatusCode != http.StatusOK {
-		logs.Errorf("Failed to download file from %s, the status is %s", rawUrl, response.Status)
+		if response.StatusCode == http.StatusNotFound {
+			return ErrNotFound
+		}
+		logs.Errorf("Failed to download file from %s, the status code is %d, the status is %s", rawUrl, response.StatusCode, response.Status)
 		return ErrInvalidStatus
+	}
+
+	parentDir := path.Dir(destFilePath)
+	if !FileExists(parentDir) {
+		if err := os.MkdirAll(parentDir, 0755); err != nil {
+			logs.Errorf("Failed to create dir %s, the error is %#v", parentDir, err)
+			return err
+		}
 	}
 
 	output, err := os.Create(destFilePath)
@@ -64,7 +67,9 @@ func DownloadFromUrl(rawUrl, dest, filePath string) error {
 		logs.Errorf("Error while creating %s, the error is %v", filePath, err)
 		return err
 	}
-	defer output.Close()
+	defer func() {
+		_ = output.Close()
+	}()
 
 	n, err := io.Copy(output, response.Body)
 	if err != nil {
