@@ -132,7 +132,7 @@ func (d DefaultDB) GetInt(query string, args ...interface{}) (int64, error) {
 	return maxValue, err
 }
 
-func (d DefaultDB) GetConnection() (*sqlx.DB, error) {
+func (d *DefaultDB) GetConnection() (*sqlx.DB, error) {
 	connectionMutex.Lock()
 	defer connectionMutex.Unlock()
 
