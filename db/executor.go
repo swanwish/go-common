@@ -52,7 +52,7 @@ type DefaultDB struct {
 	pool                 *sqlx.DB
 }
 
-func (d DefaultDB) Rebind(query string) string {
+func (d *DefaultDB) Rebind(query string) string {
 	if d.driver == "" {
 		_, err := d.GetConnection()
 		if err != nil {

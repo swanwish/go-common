@@ -43,9 +43,9 @@ func GetConnectionWithDriverAndDsn(driver, dsn string) func() (string, *sqlx.DB,
 }
 
 func GetDBConnection(id string) DB {
-	return DefaultDB{ConnectionGetterFunc: GetConnectionGetFunc(id)}
+	return &DefaultDB{ConnectionGetterFunc: GetConnectionGetFunc(id)}
 }
 
 func GetDBConnectionWithDriverAndDsn(driver, dsn string) DB {
-	return DefaultDB{ConnectionGetterFunc: GetConnectionWithDriverAndDsn(driver, dsn)}
+	return &DefaultDB{ConnectionGetterFunc: GetConnectionWithDriverAndDsn(driver, dsn)}
 }
