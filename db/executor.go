@@ -32,6 +32,7 @@ type SqlExecutorx interface {
 }
 
 type DB interface {
+	Rebind(query string) string
 	Select(dest interface{}, query string, args ...interface{}) error
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -46,8 +47,20 @@ var (
 )
 
 type DefaultDB struct {
-	ConnectionGetterFunc func() (*sqlx.DB, error)
+	driver               string
+	ConnectionGetterFunc func() (string, *sqlx.DB, error)
 	pool                 *sqlx.DB
+}
+
+func (d DefaultDB) Rebind(query string) string {
+	if d.driver == "" {
+		_, err := d.GetConnection()
+		if err != nil {
+			logs.Errorf("Failed to get connection, the error is %#v", err)
+			return query
+		}
+	}
+	return sqlx.Rebind(sqlx.BindType(d.driver), query)
 }
 
 func (d DefaultDB) Select(dest interface{}, query string, args ...interface{}) error {
@@ -56,11 +69,12 @@ func (d DefaultDB) Select(dest interface{}, query string, args ...interface{}) e
 		return ErrNoConnectionProvider
 	}
 	logSql(logs.LOG_LEVEL_DEBUG, query, nil, args...)
-	dbConnection, err := d.ConnectionGetterFunc()
+	driver, dbConnection, err := d.ConnectionGetterFunc()
 	if err != nil {
 		logs.Error(ErrorMessageGetConnectionFailed, err)
 		return err
 	}
+	d.driver = driver
 	defer func() {
 		_ = dbConnection.Close()
 	}()
@@ -130,11 +144,12 @@ func (d DefaultDB) GetConnection() (*sqlx.DB, error) {
 		logs.Errorf(ErrorMessageNoConnectionProvider)
 		return nil, ErrNoConnectionProvider
 	}
-	pool, err := d.ConnectionGetterFunc()
+	driver, pool, err := d.ConnectionGetterFunc()
 	if err != nil {
 		logs.Errorf("Failed to get database connection, the error is %v", err)
 		return nil, err
 	}
+	d.driver = driver
 	d.pool = pool
 	return d.pool, nil
 }
@@ -160,8 +175,12 @@ func (d DefaultDB) InTransaction(TransactionFunc func(*sql.Tx) error) error {
 	}()
 
 	tx, err := dbConnection.Begin()
-	err = TransactionFunc(tx)
+	if err != nil {
+		logs.Errorf("Failed to begin transaction, the error is %#v", err)
+		return err
+	}
 
+	err = TransactionFunc(tx)
 	if err != nil {
 		logs.Errorf("Failed to execute transaction function, the error is %v", err)
 		_ = tx.Rollback()
@@ -193,8 +212,12 @@ func (d DefaultDB) InTransactionx(TransactionFunc func(*sqlx.Tx) error) error {
 	}()
 
 	tx, err := dbConnection.Beginx()
-	err = TransactionFunc(tx)
+	if err != nil {
+		logs.Errorf("Failed to begin transaction, the error is %#v", err)
+		return err
+	}
 
+	err = TransactionFunc(tx)
 	if err != nil {
 		logs.Errorf("Failed to execute transaction function, the error is %v", err)
 		_ = tx.Rollback()

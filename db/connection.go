@@ -18,27 +18,27 @@ var (
 /**
  * Get connection get function by configure id
  */
-func GetConnectionGetFunc(id string) func() (*sqlx.DB, error) {
-	return func() (*sqlx.DB, error) {
+func GetConnectionGetFunc(id string) func() (string, *sqlx.DB, error) {
+	return func() (string, *sqlx.DB, error) {
 		driver, _ := config.Get(fmt.Sprintf("db_driver_%s", id))
 		dsn, _ := config.Get(fmt.Sprintf("db_dsn_%s", id))
 		if driver == "" || dsn == "" {
 			logs.Errorf("The driver or dsn is not specified for id %s.", id)
-			return nil, ErrConfigurationMissing
+			return "", nil, ErrConfigurationMissing
 		}
 		db, err := sqlx.Open(driver, dsn)
-		return db, err
+		return driver, db, err
 	}
 }
 
-func GetConnectionWithDriverAndDsn(driver, dsn string) func() (*sqlx.DB, error) {
-	return func() (*sqlx.DB, error) {
+func GetConnectionWithDriverAndDsn(driver, dsn string) func() (string, *sqlx.DB, error) {
+	return func() (string, *sqlx.DB, error) {
 		if driver == "" || dsn == "" {
 			logs.Errorf("The driver or dsn is not specified.")
-			return nil, ErrConfigurationMissing
+			return "", nil, ErrConfigurationMissing
 		}
 		db, err := sqlx.Open(driver, dsn)
-		return db, err
+		return driver, db, err
 	}
 }
 
