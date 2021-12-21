@@ -214,6 +214,16 @@ func (ctx HandlerContext) ServeContent(name string, content []byte) {
 	utils.ServeContent(ctx.W, ctx.R, name, content)
 }
 
+func (ctx HandlerContext) ServeJsonContent(name string, data interface{}) {
+	content, err := json.Marshal(data)
+	if err != nil {
+		logs.Errorf("Failed to marshal data `%#v` to json, the error is %#v", data, err)
+		ctx.ReplyInvalidParameterError()
+		return
+	}
+	ctx.ServeContent(name, content)
+}
+
 func (ctx HandlerContext) GetRequestContent() ([]byte, error) {
 	contents, err := ioutil.ReadAll(ctx.R.Body)
 	if err != nil {
