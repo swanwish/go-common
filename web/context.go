@@ -207,7 +207,11 @@ func (ctx HandlerContext) Redirect(url string, code int) {
 }
 
 func (ctx HandlerContext) ServeFile(filePath string) {
-	utils.ServeFile(filePath, ctx.W, ctx.R, false)
+	utils.ServeFile(ctx.W, ctx.R, filePath)
+}
+
+func (ctx HandlerContext) ServeContent(name string, content []byte) {
+	utils.ServeContent(ctx.W, ctx.R, name, content)
 }
 
 func (ctx HandlerContext) GetRequestContent() ([]byte, error) {
