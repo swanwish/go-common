@@ -2,10 +2,12 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/gorilla/sessions"
+	"github.com/spf13/viper"
 	"github.com/swanwish/go-common/config"
 	"github.com/swanwish/go-common/logs"
 	"github.com/swanwish/go-common/utils"
@@ -94,5 +96,56 @@ func LoadSettings() {
 			logs.Infof("The cors is enabled")
 			SetEnableCors(true)
 		}
+	}
+}
+
+func LoadViperSettings(v *viper.Viper) {
+	enableUserIdentityCheck := v.GetInt(fmt.Sprintf("web.%s", KeyEnableUserIdentity))
+	EnableUserIdentityCheck = enableUserIdentityCheck == 1
+	userIdentityListJson := v.GetString(fmt.Sprintf("web.%s", KeyValidUserIdentityListJson))
+	if userIdentityListJson == "" {
+		logs.Infof("Identity user list json is not configured")
+		EnableUserIdentityCheck = false
+	}
+	var userIdentityList []UserIdentity
+	err := json.Unmarshal([]byte(userIdentityListJson), &userIdentityList)
+	if err != nil {
+		logs.Errorf("Failed to unmarshal user identity list json %s, the error is %v", userIdentityListJson, err)
+		EnableUserIdentityCheck = false
+	} else if len(userIdentityList) == 0 {
+		EnableUserIdentityCheck = false
+	} else {
+		UserIdentityList = userIdentityList
+		for _, userIdentity := range UserIdentityList {
+			logs.Debugf("user identity key: %s, value: %s", userIdentity.Key, userIdentity.Value)
+		}
+	}
+	if EnableUserIdentityCheck {
+		logs.Infof("Identity check enabled")
+	} else {
+		logs.Info("Identity check is disabled")
+	}
+	AllowedRefers = []string{}
+	ReferCheckEnabled = false
+	if allowedRefers := v.GetString(fmt.Sprintf("web.%s", KeyAllowedRefers)); allowedRefers != "" {
+		refers := strings.Split(allowedRefers, ",")
+		for _, refer := range refers {
+			refer := strings.TrimSpace(refer)
+			if refer != "" {
+				AllowedRefers = append(AllowedRefers, refer)
+				ReferCheckEnabled = true
+			}
+		}
+	}
+	if ReferCheckEnabled {
+		logs.Infof("The allowed refers are %+v", AllowedRefers)
+	} else {
+		logs.Infof("The allowed refer is not enabled")
+	}
+
+	enableCors := v.GetInt(fmt.Sprintf("web.%s", KeyEnableCors))
+	if enableCors == 1 {
+		logs.Infof("The cors is enabled")
+		SetEnableCors(true)
 	}
 }
