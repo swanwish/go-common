@@ -96,28 +96,28 @@ func PostUrlContentWithBasicAuth(url, username, password string, content []byte,
 	return resp.StatusCode, body, nil
 }
 
-func PostRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
+func PostRequest(url string, data url.Values, querys url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	}
-	return Request("POST", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
+	return Request("POST", url, EmptyUsername, EmptyPassword, data.Encode(), querys.Encode(), headers)
 }
 
-func GetRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
+func GetRequest(url string, data url.Values, querys url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("GET", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
+	return Request("GET", url, EmptyUsername, EmptyPassword, data.Encode(), querys.Encode(), headers)
 }
 
-func PutRequest(url string, data url.Values, headers http.Header) (int, []byte, error) {
+func PutRequest(url string, data url.Values, querys url.Values, headers http.Header) (int, []byte, error) {
 	if headers != nil && headers.Get("Content-Type") == "" {
 		headers.Set("Content-Type", "application/json; charset=utf-8")
 	}
-	return Request("PUT", url, EmptyUsername, EmptyPassword, data.Encode(), headers)
+	return Request("PUT", url, EmptyUsername, EmptyPassword, data.Encode(), querys.Encode(), headers)
 }
 
-func Request(method, url, username, password, content string, headers http.Header) (int, []byte, error) {
+func Request(method, url, username, password, content, rawQuery string, headers http.Header) (int, []byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, bytes.NewBufferString(content))
 	if err != nil {
@@ -130,6 +130,10 @@ func Request(method, url, username, password, content string, headers http.Heade
 		for key, value := range headers {
 			req.Header[key] = value
 		}
+	}
+
+	if rawQuery != "" {
+		req.URL.RawQuery = rawQuery
 	}
 
 	if username != "" && password != "" {
