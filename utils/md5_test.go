@@ -13,7 +13,7 @@ func TestGetFileMd5Hash(t *testing.T) {
 		expected string
 	}{
 		{filePath: "", hasError: true, expected: ""},
-		{filePath: "/usr/bin/tail", hasError: false, expected: "0476c3a044da707a3c5319be141ba217"},
+		{filePath: "./md5.go", hasError: false, expected: "916ce96e225213ceaf8a4c2433917091"},
 	}
 
 	for _, testCase := range testCases {
