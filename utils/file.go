@@ -35,7 +35,7 @@ func SaveFile(filePath string, data []byte, perm ...fs.FileMode) error {
 		}
 	}
 	var filePerm fs.FileMode = 0644
-	if len(perm) == 0 {
+	if len(perm) > 0 {
 		filePerm = perm[0]
 	}
 	return os.WriteFile(filePath, data, filePerm)
