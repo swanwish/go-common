@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +25,7 @@ func GetCurrentDirectory() (string, error) {
 	return strings.Replace(dir, "\\", "/", -1), nil
 }
 
-func SaveFile(filePath string, data []byte) error {
+func SaveFile(filePath string, data []byte, perm ...fs.FileMode) error {
 	fileDir := filepath.Dir(filePath)
 	if !FileExists(fileDir) {
 		err := os.MkdirAll(fileDir, 0755)
@@ -34,7 +34,11 @@ func SaveFile(filePath string, data []byte) error {
 			return err
 		}
 	}
-	return ioutil.WriteFile(filePath, data, 0644)
+	var filePerm fs.FileMode = 0644
+	if len(perm) == 0 {
+		filePerm = perm[0]
+	}
+	return os.WriteFile(filePath, data, filePerm)
 }
 
 func DeleteFile(filePath string) error {
