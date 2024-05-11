@@ -3,7 +3,7 @@ package web
 import (
 	"encoding/gob"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -92,6 +92,18 @@ func stringToInt(str string) int64 {
 	return 0
 }
 
+func stringToUint(str string) uint64 {
+	if str != "" {
+		intValue, err := strconv.ParseUint(str, 10, 64)
+		if err != nil {
+			logs.Errorf("Failed to parse string value %s to uint, the error is %v", str, err)
+		} else {
+			return intValue
+		}
+	}
+	return 0
+}
+
 func (ctx HandlerContext) FormValue(key string) string {
 	return ctx.R.FormValue(key)
 }
@@ -103,8 +115,22 @@ func (ctx HandlerContext) FormValues(key string) []string {
 	return ctx.R.Form[key]
 }
 
+func (ctx HandlerContext) FormUintValue(key string) uint64 {
+	return stringToUint(ctx.FormValue(key))
+}
+
 func (ctx HandlerContext) FormIntValue(key string) int64 {
 	return stringToInt(ctx.FormValue(key))
+}
+
+func (ctx HandlerContext) FormUnescapedValue(key string) string {
+	formValue := ctx.FormValue(key)
+	unescapedFormValue, err := url.QueryUnescape(formValue)
+	if err != nil {
+		logs.Errorf("Failed to unescape form value %s, the error is %v", formValue, err)
+		return formValue
+	}
+	return unescapedFormValue
 }
 
 func (ctx HandlerContext) HeaderValue(key string) string {
@@ -167,7 +193,7 @@ func (ctx *HandlerContext) BodyValue(key string) string {
 }
 
 func (ctx *HandlerContext) JsonData(dst interface{}) error {
-	buf, err := ioutil.ReadAll(ctx.R.Body)
+	buf, err := io.ReadAll(ctx.R.Body)
 	if err != nil {
 		logs.Errorf("Failed to read content from request, the error is %v", err)
 		return err
@@ -225,7 +251,7 @@ func (ctx HandlerContext) ServeJsonContent(name string, data interface{}) {
 }
 
 func (ctx HandlerContext) GetRequestContent() ([]byte, error) {
-	contents, err := ioutil.ReadAll(ctx.R.Body)
+	contents, err := io.ReadAll(ctx.R.Body)
 	if err != nil {
 		logs.Errorf("Failed to read content from response, the error is %v", err)
 	}

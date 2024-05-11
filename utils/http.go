@@ -3,7 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -53,7 +53,7 @@ func GetUrlContent(url string) (int, []byte, error) {
 		_ = response.Body.Close()
 	}()
 
-	contents, err := ioutil.ReadAll(response.Body)
+	contents, err := io.ReadAll(response.Body)
 	if err != nil {
 		logs.Errorf("Failed to read content from response, the error is %v\n", err)
 		return http.StatusInternalServerError, nil, err
@@ -91,7 +91,7 @@ func PostUrlContentWithBasicAuth(url, username, password string, content []byte,
 		_ = resp.Body.Close()
 	}()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	logs.Debugf("The content is %s", string(body))
 	return resp.StatusCode, body, nil
 }
@@ -149,7 +149,7 @@ func Request(method, url, username, password, content, rawQuery string, headers 
 		_ = resp.Body.Close()
 	}()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	logs.Debugf("The content is %s", string(body))
 	return resp.StatusCode, body, nil
 }
