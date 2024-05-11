@@ -30,6 +30,14 @@ func MakeLogEnabledHandler(fn func(HandlerContext)) http.HandlerFunc {
 	}
 }
 
+func MakeWrappedLogEnabledHandler(fn func(HandlerContext)) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx := CreateHandlerContext(rw, r)
+		LogRequest(r)
+		fn(ctx)
+	}
+}
+
 func MakeSessionCheckHandler(fn func(SessionHandlerContext)) http.HandlerFunc {
 	return MakeSessionCheckHandlerWithCallback(fn, nil)
 }
