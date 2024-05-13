@@ -9,7 +9,9 @@ import (
 
 type Configuration interface {
 	Load(filePath string) error
+	LoadContent(content string) error
 	Get(key string) string
+	Unmarshal(dest interface{}) error
 }
 
 var (
@@ -31,6 +33,13 @@ func Load(filePath string) error {
 	return Config.Load(filePath)
 }
 
+func LoadContent(content string) error {
+	if Config == nil {
+		return ErrConfigurationTypeNotSpecified
+	}
+	return Config.LoadContent(content)
+}
+
 func Get(key string) (string, error) {
 	if Config == nil {
 		return "", ErrConfigurationTypeNotSpecified
@@ -44,6 +53,10 @@ func GetInt(key string) (int64, error) {
 		return 0, err
 	}
 	return strconv.ParseInt(strValue, 10, 64)
+}
+
+func Unmarshal(dest interface{}) error {
+	return Config.Unmarshal(dest)
 }
 
 //func NewConfig(configType, filePath string) (Configuration, error) {
